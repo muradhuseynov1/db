@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, request, current_app
+from flask import Blueprint, json, jsonify, request, current_app
 from flask_cors import cross_origin
 from .models import db, User, Prediction
 import os
@@ -92,30 +92,45 @@ def leaderboard():
 @main_bp.route('/api/charts/<crypto_symbol>', methods=['GET'])
 @cross_origin()
 def get_charts(crypto_symbol):
-    # 1) load CSV from project root
-    base = os.path.dirname(os.path.dirname(__file__))
-    path = os.path.join(base, 'crypto_news_price_ohlc_dataset.csv')
-    df = pd.read_csv(path, parse_dates=['timestamp'])
+    # 1) load CSV from project root (drop the bogus 'backend' folder)
+    base = os.path.dirname(os.path.dirname(__file__))  
+    path = os.path.join(base, 'backend', 'data', 'crypto_news_price_ohlc_dataset.csv')
 
     # 2) filter for symbol
-    df = df[df['coin']==crypto_symbol]
+    df = pd.read_csv(path, parse_dates=['timestamp'])
+    df = df[df['coin'] == crypto_symbol]
     current_app.logger.debug(f"get_charts: {crypto_symbol} → {len(df)} rows")
 
     # 3) rename price_usd→price for your front-end
     if 'price_usd' in df.columns:
         df = df.rename(columns={'price_usd':'price'})
 
-    # 4) MACD
+    # 4) inject the fields your React component expects
+    #    — if you have real volume or sentiment in your CSV you can
+    #      rename/use those; otherwise placeholders:
+
+    if 'volume_24h' in df.columns:
+        df = df.rename(columns={'volume_24h': 'volume'})
+    df['volume']    = df.get('volume', 0)           # placeholder zero if no column
+    df['sentiment'] = df.get('sentiment_num', 0)    # or df['sentiment_num'] if present
+
+
+    # 5) MACD
     macd = get_macd(df)
 
-    # 5) we’ll skip predictions for now
-    return jsonify({
-      'historical_data': df.to_dict('records'),
-      'macd': macd,
-      'predictions': []
-    }), 200
+    # 6) Costruiamo un JSON serializzabile
+    response_payload = {
+        'historical_data': json.loads(
+            df.to_json(orient='records', date_format='iso')  # ← timestamp in ISO
+        ),
+        # convertiamo le Series/ndarray in liste di float nativi
+        'macd': {k: [float(x) for x in v] for k, v in macd.items()},
+        'predictions': []
+    }
+    return jsonify(response_payload), 200
 
 @main_bp.route('/api/news', methods=['GET'])
+@cross_origin()
 def get_news():
     try:
         news = fetch_news()
