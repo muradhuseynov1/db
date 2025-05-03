@@ -23,15 +23,17 @@ function Charts() {
     (async () => {
       try {
         const { data } = await axios.get(`http://localhost:5000/api/charts/${selectedCrypto}`);
+        console.log("✅ chartData:", data.historical_data);
+        console.log("✅ macdData:", data.macd); 
         setChartData(data.historical_data);
         setMacdData(data.macd);
         const latest = data.historical_data.slice(-1)[0];
         setKeyMetrics({
-          currentPrice: latest.close,
-          priceChange: ((latest.close - data.historical_data[0].close)/data.historical_data[0].close*100).toFixed(2),
-          volume24h: latest.volume,
-          sentiment: latest.sentiment_num,
-        });
+            currentPrice: latest.close,
+            priceChange: ((latest.close - data.historical_data[0].close)/data.historical_data[0].close*100).toFixed(2),
+            volume24h: latest.volume,
+            sentiment: latest.sentiment,   // ← use the new field name
+          });
       } catch (e) {
         console.error(e);
       }
