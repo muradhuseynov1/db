@@ -5,7 +5,7 @@ from .models import db
 
 def create_app():
     app = Flask(__name__)
-    CORS(app)
+    CORS(app, resources={r"/api/*": {"origins": "*"}})
     
     # Configuration
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///crypto_app.db'

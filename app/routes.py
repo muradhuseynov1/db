@@ -1,5 +1,7 @@
 from flask import Blueprint, jsonify, request, current_app
+from flask_cors import cross_origin
 from .models import db, User, Prediction
+import os
 from datetime import datetime
 import torch
 import pandas as pd
@@ -88,28 +90,29 @@ def leaderboard():
     } for user in users]), 200
 
 @main_bp.route('/api/charts/<crypto_symbol>', methods=['GET'])
+@cross_origin()
 def get_charts(crypto_symbol):
-    df_feat = pd.read_csv('crypto_news_features.csv', parse_dates=['timestamp'])
+    # 1) load CSV from project root
+    base = os.path.dirname(os.path.dirname(__file__))
+    path = os.path.join(base, 'crypto_news_price_ohlc_dataset.csv')
+    df = pd.read_csv(path, parse_dates=['timestamp'])
 
-    # 3) filter to just this symbol (and drop rows missing any features)
-    crypto_data = df_feat[df_feat['coin'] == crypto_symbol].dropna(subset=[
-        "sentiment_num",
-        "ret_5m","ret_15m","ret_30m",
-        "vol_5m","vol_15m","vol_30m",
-        "sin_hour","cos_hour","pct_return_60m"
-    ])
+    # 2) filter for symbol
+    df = df[df['coin']==crypto_symbol]
+    current_app.logger.debug(f"get_charts: {crypto_symbol} → {len(df)} rows")
 
-    # 4) MACD on the raw price series
-    macd_data = get_macd(crypto_data)
+    # 3) rename price_usd→price for your front-end
+    if 'price_usd' in df.columns:
+        df = df.rename(columns={'price_usd':'price'})
 
-    # 5) predictions now has everything it needs
-    predictions = make_predictions(crypto_data)
-    
-    
+    # 4) MACD
+    macd = get_macd(df)
+
+    # 5) we’ll skip predictions for now
     return jsonify({
-        'historical_data': crypto_data.to_dict('records'),
-        'macd': macd_data,
-        'predictions': predictions
+      'historical_data': df.to_dict('records'),
+      'macd': macd,
+      'predictions': []
     }), 200
 
 @main_bp.route('/api/news', methods=['GET'])
