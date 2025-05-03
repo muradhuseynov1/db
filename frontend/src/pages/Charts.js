@@ -28,7 +28,11 @@ function Charts() {
   const [selectedCrypto, setSelectedCrypto] = useState('BTC');
   const [selectedFeature, setSelectedFeature] = useState('price');
   const [chartData, setChartData] = useState([]);
-  const [macdData, setMacdData] = useState({});
+  const [macdData, setMacdData] = useState({
+    macd: [],
+    signal: [],
+    histogram: []
+  });
   const [keyMetrics, setKeyMetrics] = useState({});
 
   useEffect(() => {
@@ -56,6 +60,10 @@ function Charts() {
 
     fetchChartData();
   }, [selectedCrypto]);
+
+  if (chartData.length === 0) {
+    return <Typography>Loading chart…</Typography>;
+  }  
 
   return (
     <Box sx={{ p: 3 }}>
@@ -99,23 +107,14 @@ function Charts() {
 
         <Grid item xs={12} md={8}>
           <Paper sx={{ p: 2, height: 400 }}>
-            <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%">
+            {selectedFeature !== 'macd' ? (
               <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis
-                  dataKey="timestamp"
-                  tickFormatter={(value) => new Date(value).toLocaleDateString()}
-                />
-                <YAxis />
-                <Tooltip
-                  labelFormatter={(value) => new Date(value).toLocaleString()}
-                />
-                <Legend />
+                {/* … your existing price/volume/sentiment here … */}
                 <Line
                   type="monotone"
                   dataKey={selectedFeature}
                   stroke="#8884d8"
-                  activeDot={{ r: 8 }}
                 />
                 {selectedFeature === 'price' && (
                   <Line
@@ -126,7 +125,29 @@ function Charts() {
                   />
                 )}
               </LineChart>
-            </ResponsiveContainer>
+            ) : (
+              <LineChart
+                data={chartData.map((row, i) => ({
+                  timestamp: row.timestamp,
+                  macd: macdData.macd[i],
+                  signal: macdData.signal[i],
+                  histogram: macdData.histogram[i]
+                }))}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis
+                  dataKey="timestamp"
+                  tickFormatter={(v) => new Date(v).toLocaleDateString()}
+                />
+                <YAxis />
+                <Tooltip labelFormatter={(v) => new Date(v).toLocaleString()} />
+                <Legend />
+                <Line type="monotone" dataKey="macd" stroke="#8884d8" />
+                <Line type="monotone" dataKey="signal" stroke="#82ca9d" />
+                <Line type="monotone" dataKey="histogram" stroke="#ffc658" />
+              </LineChart>
+            )}
+          </ResponsiveContainer>
           </Paper>
         </Grid>
 
@@ -137,7 +158,10 @@ function Charts() {
             </Typography>
             <Box sx={{ mt: 2 }}>
               <Typography variant="body1">
-                Current Price: ${keyMetrics.currentPrice?.toFixed(2)}
+                MACD:{' '}
+                {macdData.macd.length
+                  ? macdData.macd.slice(-1)[0].toFixed(4)
+                  : '—'}
               </Typography>
               <Typography
                 variant="body1"
@@ -161,10 +185,16 @@ function Charts() {
                 MACD: {macdData.macd?.slice(-1)[0]?.toFixed(4)}
               </Typography>
               <Typography variant="body1">
-                Signal: {macdData.signal?.slice(-1)[0]?.toFixed(4)}
+                Signal:{' '}
+                {macdData.signal.length
+                  ? macdData.signal.slice(-1)[0].toFixed(4)
+                  : '—'}
               </Typography>
               <Typography variant="body1">
-                Histogram: {macdData.histogram?.slice(-1)[0]?.toFixed(4)}
+                Histogram:{' '}
+                {macdData.histogram.length
+                  ? macdData.histogram.slice(-1)[0].toFixed(4)
+                  : '—'}
               </Typography>
             </Box>
           </Paper>

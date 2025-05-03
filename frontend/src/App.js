@@ -12,7 +12,7 @@ import Layout from './components/Layout';
 const theme = createTheme({
   palette: {
     mode: 'dark',
-    primary: {
+    primary: { 
       main: '#90caf9',
     },
     secondary: {

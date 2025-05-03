@@ -1,16 +1,19 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, current_app
 from .models import db, User, Prediction
 from datetime import datetime
 import torch
 import pandas as pd
 import numpy as np
-from .utils import preprocess_data, get_macd, fetch_news
+from .utils import (
+    preprocess_data,
+    get_macd,
+    fetch_news,
+    get_current_price,
+    generate_features,
+    make_predictions
+)
 
 main_bp = Blueprint('main', __name__)
-
-# Load the LSTM model
-model = torch.load('best_lstm_model.pt')
-model.eval()
 
 @main_bp.route('/api/register', methods=['POST'])
 def register():
@@ -86,15 +89,22 @@ def leaderboard():
 
 @main_bp.route('/api/charts/<crypto_symbol>', methods=['GET'])
 def get_charts(crypto_symbol):
-    # Get historical data
-    df = pd.read_csv('crypto_news_price_ohlc_dataset.csv')
-    crypto_data = df[df['coin'] == crypto_symbol]
-    
-    # Calculate MACD
+    df_feat = pd.read_csv('crypto_news_features.csv', parse_dates=['timestamp'])
+
+    # 3) filter to just this symbol (and drop rows missing any features)
+    crypto_data = df_feat[df_feat['coin'] == crypto_symbol].dropna(subset=[
+        "sentiment_num",
+        "ret_5m","ret_15m","ret_30m",
+        "vol_5m","vol_15m","vol_30m",
+        "sin_hour","cos_hour","pct_return_60m"
+    ])
+
+    # 4) MACD on the raw price series
     macd_data = get_macd(crypto_data)
-    
-    # Get predictions
+
+    # 5) predictions now has everything it needs
     predictions = make_predictions(crypto_data)
+    
     
     return jsonify({
         'historical_data': crypto_data.to_dict('records'),
@@ -104,5 +114,10 @@ def get_charts(crypto_symbol):
 
 @main_bp.route('/api/news', methods=['GET'])
 def get_news():
-    news = fetch_news()
-    return jsonify(news), 200 
+    try:
+        news = fetch_news()
+    except Exception as e:
+        # log the underlying error so you can diagnose it, but don't 500
+        current_app.logger.error(f"📰 fetch_news failed: {e}")
+        news = []
+    return jsonify(news), 200
