@@ -1,0 +1,397 @@
+1) priamry key - a column that is unique to identify rows.
+2) surregant key - a type of primary key that has no special meaning. It used just for identifying a row. It does not have mapping to real world
+3) natural key - a type of primary key that has a meaning. for example, social security numbers of employees. It has mapping to real world.
+4) Foreign key - an attribute (columns value) in a database table that will link the database table to another database table. It is the primary key of the other table. For example, branch_id is a primary key of the "Branch" table. This attribute can be used inside "Employee" table to identify the branches that employees blong to. While the attribute is the primary key (unique) in the "Branch" table, it's values can be used in multiple rows in "Employee" table and connect the two tables. Foreign key can also connect (make reference) between rows inside the same table. 
+5) Composite key - Consisted of 2 (maybe more?) attributes (columns). It is needed when 2 attributes cannot identify each row uniquely, but they they can uniquely identify each row only if they are used together. All in all, it means there are two columns which are primary key, which is the composite key.
+
+6) Structured Query Language (SQL) is a hybrid language, it's basically 4 languages in one: Data Query Language (DQL), Data Definition Language (DDL), Data Control Language (DCL), Data Manipulation Language (DML)
+7) A query is a set of instructions given to the RDBMS (written in SQL) that tell the RDBMS what information you want it to retrieve for you
+===========================================================================================
+to create a database in mysql, use the command: create database "name_of_database";
+
+core SQL datatypes (there are many more):
+1) INT - whole numbers
+2) DECIMAL(M,N) - Decimal numbers, exact value -> M is the total number of digits to be stored, N is the number of digits after the decimal point to be stored
+e.g.: DECIMAL(10,4) means we want to store a number with 10 digits and 4 of the digits will be after the decimal point
+3) VARCHAR(l) - string of text of length l
+e.g.: VARCHAR(10) - we want to store a string with length of 10
+4) BLOB - Binary Large Object, Stores large data. this is binary data for storing images or files
+5) DATE - 'YYYY-MM-DD'
+6) TIMESTAMP - 'YYYY-MM-DD HH:MM:SS' used for recording
+
+-to create a table, use the command: CREATE TABLE "table_name" ("attibutes");
+-to give the attribute: "attribute_name" "TYPE" PRIMARY KEY, (if it is a primary key, just put PRIMARY KEY as shown) 
+NOTE: another way to make a field primary key -> in the end of the schema type: PRIMARY KEY("field_name")
+NOTE: you can use NOT NULL keyword if the field cannot be null or UNIQUE keyword if the the values for the field should be unique.
+name VARCHAR(20) NOT NULL , name VARCHAR(20) UNIQUE,
+NOTE: PRIMARY KEY = NOT NULL + UNIQUE
+NOTE: NOT NULL, UNIQUE are called constraints
+NOTE: another constraint is DEFAULT which is used for giving default values for fields -> e.g.: name VARCHAR(20) DEFAULT 'undecided',
+NOTE: another constraint is AUTO_INCREMENT which increments every new data inserted for a field. This can be useful unique keys for example (or others fields).
+-to get description (information) about a table (fields, types, ...), use the command: DESCRIBE "table_name"; [DESCRIBE TABLE table_name is another query]
+-to delete a table: DROP TABLE "table_name";
+-to modify a table, particularly add a new field: ALTER TABLE "table_name" ADD "field_name" "TYPE";
+-to modify a table, particularly delete a field: ALTER TABLE "table_name" DROP COLUMN "field/column_name";
+-to insert a row in a table: INSERT INTO "table_name" VALUES("field1 value", "field2 value", ..., "fieldN value"); -> the order of the field should be exactly the same as in the table schema
+-to view the whole table: SELECT * FROM "table_name";
+- to insert a row with by only adding information of certain fields: INSERT INTO "table_name"(field1  name, field2 name, ...) VALUES("field1 value", "field2 value", ...); -> unentered values will be null
+
+-to update an attribute of a row:
+UPDATE "table_name"
+SET "column_name" = "value"
+WHERE "condition"; (without the where condition the changes will be applied to all of the rows)
+
+-to delete a row from the table:
+DELETE FROM "table_name" (if the query ends here, all row of the table will be deleted)
+WHERE condition;
+
+comparison operators:
+1) =   :equels
+2) <>  :not equal
+3) >   :greater than
+4) <   : less than
+5) >=  :greater than or equal
+6) <=  :less than or equal
+
+logical operators:
+1) OR   :or (||)
+2) AND  :and (&&)
+
+
+- SELECT keyword is retrieving information from table. to get a specific column:
+SELECT column_name from table_name; 
+but if there are more tables, you can refer to the table of the column:
+SELECT table_name.column_name from table_name;
+
+- ORDER BY is used for ordering the table by the selected column:
+SELECT student.name, student.major
+FROM student
+ORDER BY name; 
+
+by default the order is ascending, but this can be changed using DESC (ASC) keywords:
+SELECT student.name, student.major
+FROM student
+ORDER BY student_id DESC; 
+
+another example:
+SELECT *
+FROM student
+ORDER BY major, student_id; (this will first sort by major, and if there are students with the same major, it will order by student id) 
+
+or:
+SELECT *
+FROM student
+ORDER BY major DESC, student_id DESC; (the word DESC/ASC refers only to the column before it)
+
+- LIMIT is another keyword to limit the number of rows:
+SELECT *
+FROM student
+LIMIT 2; (returns only two rows from the table)
+
+all can be combined:
+SELECT *
+FROM student
+ORDER BY student_id DESC
+LIMIT 2;
+
+- WHERE is a keyword for filtering and getting back specific rows meeting specific conditions. Logical and Comparison operators can be used to make the filtering more complex and specific
+
+- IN is another filtering method: column_name IN (value1, value2, ..., valueN). it will give the rows where the columns is (in) the specified values.
+
+===========================================================================================================================================================
+
+- to create a foreign key:
+FOREIGN KEY(column_name) REFERENCES other_table(column_name_on_the_other_table_that_it_references_to) ON DELETE SET NULL 
+on delete set null is extra, you can also add ON DELETE CASCADE -> we'll talk about it later!
+
+- to create composite key:
+PRIMARY KEY(column1, column2)
+
+- with composite key, the foriegn key should have ON DELETE CASCASDE??? (instead of SET NULL)????
+
+- if you want to get a column data with another name (e.g. column name is first_name, but you want it to be called forename), use AS keyword:
+SELECT first_name AS forename FROM employee;
+
+- if you want to get only distinct values (no duplicates), use DISTINCT keyword:
+SELECT DISTINCT sex FROM employee;
+
+=================================================================================================================================
+SQL Functions:
+- COUNT() give the count
+e.g. SELECT COUNT(emp_id) FROM employee; -> gives the number of employees by counting the number of rows in the emp_id column
+
+-- find the number of female employees born after 1970
+SELECT COUNT(emp_id)
+FROM employee
+WHERE sex = 'F' AND birth_date > '1971-01-01';
+
+- AVG() find the average
+-- find the average of all empoyee's salaries
+SELECT AVG(salary)
+FROM employee;
+
+- SUM() finds the sum
+-- find the sum of all empoyee's salaries
+SELECT SUM(salary)
+FROM employee;
+
+- you can also give aggreated information, which means the data will be grouped.
+-- find out how many males and females there are
+SELECT COUNT(sex), sex
+FROM employee
+GROUP BY sex;
+
+in the example above, we ask SQL to give the count of sexes and sexes from employees but the output should be grouped by sexes. so it will give different sex counts
+
+-- find the total sales of each salesman
+SELECT SUM(total_sales), emp_id
+FROM works_with
+GROUP BY emp_id;
+
+-- find out how much each client spent
+SELECT SUM(total_sales), client_id
+FROM works_with
+GROUP BY client_id;
+
+
+- Wildcard in SQL: it is a way of defining different patterns matching a specific pattern. LIKE keyword is used -> LIKE ''; inside the quotation marks 2 special signs can be used to create the pattern
+1) % -> any number of characters
+2) _ -> one character
+
+-- find all client's who are an LLC
+SELECT *
+FROM client
+WHERE client_name LIKE '%LLC';
+
+above example means that return all rows from clients table where clint name matches this pattern: before LLC there can be any number of patters, but the name should end with LLC
+
+-- find any employee born in Obtober
+SELECT *
+FROM employee
+WHERE birth_date LIKE '____-10%';
+
+in the above example, we select any employee from employee table where the birth date of the employee meets the following condition: as the date follows the format YYYY-MM-DD, ____-10% -> 4 underscores (4 characters), a hyphen, 10 (october), then anything else
+
+====================================================================
+- UNION is an operator that connects multiple SELECT statments, it combines them
+-- find a list of employee and branch names
+SELECT first_name
+FROM employee
+UNION
+SELECT branch_name
+FROM branch;
+
+RULE: selected number of columns should be the same for each table, you cannot select two rows in one table, and one column in another one.
+RULE: selected columns should have the same data type, e.g. date, string, int, and so on.
+
+
+if you are getting columns with the same name from different table, you can reference to the tables to avoid confusion:
+-- find a list of all cients & branch suppliers' names
+SELECT client_name, client.branch_id
+FROM client
+UNION
+SELECT supplier_name, branch_supplier.branch_id
+FROM branch_supplier;
+
+===================================================================================
+- JOIN is used to combine rows from two or more tables based on a related column between them
+there are 5 basic types of joins:
+1) Inner JOIN (basic/ general one): when 2 tables share a common column. it gives the matching values only
+-- find all branches and the names of their managers
+SELECT employee.emp_id, employee.first_name, branch.branch_name
+FROM employee
+JOIN branch
+ON employee.emp_id = branch.mgr_id;
+
+100	David	Corporate
+102	Michael	Scranton
+106	Josh	Stamford
+
+since we are joining tables, we can select columns from different tables. we combine the tables using JOIN keyword and ON keyword is used to specify the columns that two tables share in common. 
+in the example above, we select employee id, employee name and branch name from employee table joined with branc table using their the common column which is called emp_id in the first table and mgr_id in the second table.
+
+2) LEFT JOIN: similar to inner join, but returns all values of the left table, in the above example it is employee table
+
+100	David	Corporate
+101	Jan	null
+102	Michael	Scranton
+103	Angela	null
+104	Kelly	null
+105	Stanley	null
+106	Josh	Stamford
+107	Andy	null
+108	Jim	null
+
+3) RIGHT JOIN: similar to inner join, but returns all values of the right table, in the above example it is branch table
+
+100	David	Corporate
+102	Michael	Scranton
+106	Josh	Stamford
+null	null	Buffalo
+
+4) FULL OUTER JOIN: it is LEFT JOIN and RIGHT JOIN combined. it is not explicitely supported in MySQL. below is how can it be done in MySQL:
+
+SELECT employee.emp_id, employee.first_name, branch.branch_name
+FROM employee
+LEFT JOIN branch
+ON employee.emp_id = branch.mgr_id
+UNION
+SELECT employee.emp_id, employee.first_name, branch.branch_name
+FROM employee
+RIGHT JOIN branch
+ON employee.emp_id = branch.mgr_id;
+
+100	David	Corporate
+101	Jan	null
+102	Michael	Scranton
+103	Angela	null
+104	Kelly	null
+105	Stanley	null
+106	Josh	Stamford
+107	Andy	null
+108	Jim	null
+null	null	Buffalo
+(as you can see, the result is the combination of the results of left join and right join)
+
+
+5) CROSS JOIN: it is a Cartesian product of two table, irrespective of any filder criteria or any condition, there is no need for ON keyword.
+
+100	David	Buffalo
+100	David	Stamford
+100	David	Scranton
+100	David	Corporate
+101	Jan	Buffalo
+101	Jan	Stamford
+101	Jan	Scranton
+101	Jan	Corporate
+102	Michael	Buffalo
+102	Michael	Stamford
+102	Michael	Scranton
+102	Michael	Corporate
+103	Angela	Buffalo
+103	Angela	Stamford
+103	Angela	Scranton
+103	Angela	Corporate
+104	Kelly	Buffalo
+104	Kelly	Stamford
+104	Kelly	Scranton
+104	Kelly	Corporate
+105	Stanley	Buffalo
+105	Stanley	Stamford
+105	Stanley	Scranton
+105	Stanley	Corporate
+106	Josh	Buffalo
+106	Josh	Stamford
+106	Josh	Scranton
+106	Josh	Corporate
+107	Andy	Buffalo
+107	Andy	Stamford
+107	Andy	Scranton
+107	Andy	Corporate
+108	Jim	Buffalo
+108	Jim	Stamford
+108	Jim	Scranton
+108	Jim	Corporate
+
+=============================================================================================================================
+- Nested query is a query where multiple SELECT statements are used to get data. Inner statements are executed first, and then upper ones will be executed
+-- find names of all employees who
+-- sold over 30,000 to a single client
+SELECT employee.first_name, employee.last_name
+FROM employee
+WHERE employee.emp_id IN (
+    SELECT works_with.emp_id
+    FROM works_with
+    WHERE works_with.total_sales > 30000
+);
+
+-- find all clients who are handled by the branch
+-- that Michael Scott manages
+-- Assume you know Michael's ID
+SELECT client.client_name
+FROM client
+WHERE client.branch_id = (
+    SELECT branch.branch_id
+    FROM branch
+    WHERE branch.mgr_id = 102
+    LIMIT 1
+); [limit 1 was added in case there are multiple branches managed one Michael, so to return only 1. because we used = sign instead of IN keyword, if we wanted to give multiple branches, we would use IN keyword]
+
+========================================================================================
+- Scenarios where a row deleted in a table has a foriegn key to another table: 
+1) ON DELETE SET NOLL: if a row is deleted which is a foreign key another table, then on the deletion process the value on the other table will set to NULL
+2) ON DELETE CASCADE: if a row is deleted which is a foreign key another table, then on the deletion process the entire row on the other table will be deleted
+
+use cases: if the foreign key is also part of the PRIMARY key, CASCADE can be used, because a PRIMARY key CANNOT be NULL. But if the foreign key is just a foreign key, SET NULL can be used.
+
+================================================================================================
+- Triggers: it is a block of SQl code that defines a certain action if a certain action is performed. e.g. a row is added, insert something and so on.
+Triggers are defined in the terminal, basically to set up triggers, we need to use the terminal. Also we modify the delimiter in the terminal. DELIMITER is the semicolon (;) that we use to end a query. Since we are using semicolon to to end MySQL queries, we cannot use it to end the trigger, that is why, we change the delimiter to $$ using 'DELIMITER $$' command in the beginning. after that we define the trigger. finally, we change the DELIMITER back to semicolon using 'DELIMITER ;' command.
+-> go to terminal, enter your password if asked
+-> type command: use database_name, e.g. use mydatabase
+-> DELIMITER $$
+-> add the trigger (you can write it on a text editor and paste to terminal to make it easier for yourself)
+-> DELIMITER ;
+
+DELIMITER $$
+CREATE 
+    TRIGGER my_trigger BEFORE INSERT
+    ON employee
+    FOR EACH ROW BEGIN
+        INSERT INTO trigger_test VALUES('added new employee');
+    END$$
+DELIMITER;
+
+for the above example, after you add a new employee to the employee table and select all from trigger_test table, it should give "added new people" message" as many as the number of the employees added to the table.
+
+DELIMITER $$
+CREATE 
+    TRIGGER my_trigger1 BEFORE INSERT
+    ON employee
+    FOR EACH ROW BEGIN
+        INSERT INTO trigger_test VALUES(NEW.first_name);
+    END$$
+DELIMITER;
+
+the above trigger is a new trigger and now if a new employee is added, NEW.first_name will also add the newly added employee's first name. NEW keyword references to the new row added and first_name is the attribute of the table.
+
+DELIMITER $$
+CREATE 
+    TRIGGER my_trigger2 BEFORE INSERT
+    ON employee
+    FOR EACH ROW BEGIN
+        IF NEW.sex = 'M' THEN
+            INSERT INTO trigger_test VALUES('added male employee');
+        ELSEIF NEW.sex = 'F' THEN
+            INSERT INTO trigger_test VALUES('added female employee');
+        ELSE
+            INSERT INTO trigger_test VALUES('added other employee');
+        END IF;
+    END$$
+DELIMITER ;
+
+the above trigger is a new trigger that uses conditionals (IF/ELSEIF/ELSE).
+
+NOTE: you can also use trigger BEFORE UPDATE, BEFORE DELETE, as well as BEFORE INSERT. also, AFTER UPDATE, AFTER DELETE, AFTER INSERT
+NOTE: To drop a trigger, use the following command in the terminal: DROP TRIGGER trigger_name;
+
+====================================================================================================
+- ER DIAGRAMS: ENTITY-RELATIONSHIP DIAGRAM. 
+-> Entity - an object we want to model & store information about (in the diagram, it is a square and the object name is written inside the square)
+-> Attributes - specific pieces of information about an entity (in the diagram, it is an ellips where the name of the attribute is written inside, and the ellips is connected to the entity/object with a straight line)
+-> Primary Key - An attribute(s) that uniquely identify an entry in the database table (in the diagram, the representation is the same as attributes, except the name of the primary key inside the ellips is underlined)
+-> Composite Attribute - an attribute that can be broken up into sub-attributes (the main attribute is connected to the entity/object, while sub-entities are connected to the main attribute; e.g. name is main, first, last names are sub)
+-> Multi-valued Attribute - an attribute that can have more than one value (in the diagram, it is represented by an ellips inside an ellips; e.g. a student is an entity and clubs is a multi-valued attribute, because a student might be involved in more than one club)
+-> Derived Attribute - an attribute that can be derived from the other attributes (in the diagram, it is represented by a dashed-line ellip connected to the entity; e.g. student is an entity, gpa is an attribute, has_honors is a derived attribute where it can be derived from gpa attribute, for example getting an honors with a 3.5+ plus gpa)
+-> Multiple Entities - you can define more than one entity in the diagram
+-> Relationships - defines a relationship between two entities (it is a connector between two entities, in the diagram it is a diamond and the name of the realtionship is a verb written inside it; student is an entity, class is an entity, "student ---- takes ==== class" where "takes" is the relationship. entities can be connected to the relationship with single or double lines; single line represents partial participation, double line represents total participation. for example, not all students can take a class, while all classes need students that take them.)
+-> Relationship Attribute - an attribute about the relationship (it is an attribute connected to the relationship; for example "grade" attribute is connected to "takes" relationship because it is required to take the class to get a grade)
+-> Relationship Cardinality - the number of instances of an entity from a relation that can be associated with the relation (it can be 1 : 1, 1 : N, N : M -> M, N are any number, basically this the multiplicty from UML diagram)
+-> Weak Entity - an entity that cannot be uniquely identified by its attributes alone (it is an entity which dependent on / relies on another entity. in the diagram, it denoted by a square inside a square; for example, there is class entity and exam entity where exam is dependent on class, because the exam exists on the context of a class)
+-> Identifying Relationship - a relationship that serves to uniquely identify the weak entity (it a connector between a week entity and an entity. in the diagram it is denoted by a diamond inside a diamond)
+NOTE: Weak entities are always connected with double lines (total participation) to Identifying Relationships!!
+
+
+=================================
+- WHERE column_name IS DISTINCT FROM column_value -> contdition to say everything except that value, even NULL
+- LENGTH(column_name) -> gives the length of a column value 
