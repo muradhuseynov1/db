@@ -12,7 +12,6 @@ A web application for cryptocurrency price prediction, market analysis, and inte
 - **Gamified prediction quizzes** with a leaderboard to test your market intuition.  
 - **AI-powered news sentiment analysis** using FinBERT to assess market trends.  
 - **Responsive design** for seamless use across devices.  
-- **Secure user authentication** with account management.  
 
 ---
 
