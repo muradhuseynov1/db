@@ -45,16 +45,25 @@ def create_sequences(X, window=20):
         sequences.append(seq)
     return torch.tensor(np.array(sequences), dtype=torch.float32)
 
-def get_macd(df):
-    exp1 = df['close'].ewm(span=12, adjust=False).mean()
-    exp2 = df['close'].ewm(span=26, adjust=False).mean()
-    macd = exp1 - exp2
-    signal = macd.ewm(span=9, adjust=False).mean()
+def get_macd(df, short=12, long=26, signal=9):
+    if df.empty or 'close' not in df.columns:
+        return {'macd': [], 'signal': [], 'histogram': []}
+
+    df = df.copy()
+    df.sort_values(by='timestamp', inplace=True)
+
+    df['ema_short'] = df['close'].ewm(span=short, adjust=False).mean()
+    df['ema_long'] = df['close'].ewm(span=long, adjust=False).mean()
+    df['macd'] = df['ema_short'] - df['ema_long']
+    df['signal'] = df['macd'].ewm(span=signal, adjust=False).mean()
+    df['histogram'] = df['macd'] - df['signal']
+
     return {
-        'macd': macd.tolist(),
-        'signal': signal.tolist(),
-        'histogram': (macd - signal).tolist()
+        'macd': df['macd'].fillna(0).tolist(),
+        'signal': df['signal'].fillna(0).tolist(),
+        'histogram': df['histogram'].fillna(0).tolist()
     }
+
 
 def get_current_price(symbol):
     ticker = binance_client.get_symbol_ticker(symbol=f"{symbol}USDT")
